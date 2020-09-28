@@ -11,6 +11,8 @@ The improvements fall into two groups:
 - [Additions to existing models](#additions-to-existing-models)
   - Additional dimensions/facts
   - Performance tuning
+  
+In addition to the changes below, we could update the models to run incrementally. This would both improve both performance and cost. I chose not to do this however as there is already a pre-existing version of incremental models. 
 
 ### Creation of new models
 #### [User Stitching](sql/01-user-stitching/00-user-stitching.sql)
@@ -23,12 +25,19 @@ This model maps `domain_userid` to `user_id`. This allows non logged in sessions
 | `valid_to`               | timestamp | Point at time in which assumed user_id is invalid.        | '2015-07-22 12:23:00.00000'                    |
 
 #### [Marketing Campaigns](sql/05-marketing-campaings/00-marketing-campaings.sql)
-This model gives a high level view of marketing campaign performance, namely user acquisition, reactivation, retention and engagement. Ideally we would look to include cost data where available to give a more holistic view. 
+This model gives a high level view of marketing campaign performance such as:
+- User acquisition
+- Reactivation
+- Retention
+- Engagement. 
+
+Ideally we would look to include cost data where available to give a more holistic view. 
+
 | Field                | Type | Description                                                    | Example                                 |
 | :---                 | :--- | :---                                                           | :---                                    |
 | `marketing_medium`   | text | Type of traffic source                                         | 'cpc', 'affiliate', 'organic', 'social' |
 | `marketing_source`   | text | The company / website where the traffic came from              | 'Google', 'Facebook'                    |
-| `marketing_term`     | text | Any keywords associated with the referer                       | 'new age tarot decks'                   |
+| `marketing_term`     | text | Any keywords associated with the referrer                       | 'new age tarot decks'                   |
 | `marketing_content`  | text | The content of the ad. (Or an ID so that it can be looked up.) | '13894723'                              |
 | `marketing_campaign` | text | The campaign ID                                                | 'diageo-123'                            |
 | `marketing_click_id` | text | The click ID                                                   | 'ac3d8e459'                             |
@@ -51,7 +60,7 @@ This model gives a high level view of individual page performance. By aggregatin
 - Popular pages
 - Trending pages experiencing large growth in views
 - Pages that cause users to churn
-- Unperformant pages
+- Un-performant pages
 - Popular content. Ideally we would want some kind of page content categorisation to achieve this.
 - Device friendly content.
 
@@ -112,7 +121,7 @@ This model gives a high level view of individual page performance. By aggregatin
 - Last page visited in session details added.
 
 #### [Users](sql/04-users/00-users.sql)
-- Ammended grain of the table, aggregating on `stitched_user_id` rather than `user_snowplow_domain_id`. This provides a better representation of a customer's profile, rather than a cookie specific profile.
+- Amended grain of the table, aggregating on `stitched_user_id` rather than `user_snowplow_domain_id`. This provides a better representation of a customer's profile, rather than a cookie specific profile.
 
 
 

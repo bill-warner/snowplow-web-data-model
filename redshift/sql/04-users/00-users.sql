@@ -53,8 +53,8 @@ AS (
     -- user
 
     a.user_custom_id,
-    a.stitched_user_id
-    a.stitched_user_id_type
+    a.stitched_user_id,
+    a.stitched_user_id_type,
 
     -- first sesssion: time
 

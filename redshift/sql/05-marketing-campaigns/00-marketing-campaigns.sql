@@ -7,7 +7,7 @@ CREATE TABLE web.marketing_campaigns_tmp
   DISTKEY(marketing_campaign)
   SORTKEY(marketing_campaign)
 AS (
-
+	WITH campaigns AS (
 	SELECT
 		sessions.marketing_medium,
 	    sessions.marketing_source,
@@ -16,6 +16,7 @@ AS (
 	    sessions.marketing_campaign,
 	    sessions.marketing_click_id,
 	    sessions.marketing_network,
+	    MIN(sessions.session_start) campaign_start,
 	    COUNT(DISTINCT sessions.stitched_user_id) AS users,
 	    COUNT(DISTINCT CASE WHEN sessions.user_bounced THEN page_views.stiched_user_id END) AS users_bounced,
 	  	COUNT(DISTINCT CASE WHEN sessions.user_engaged THEN page_views.stiched_user_id END) AS users_engaged,
@@ -27,10 +28,17 @@ AS (
 	    COUNT(DISTINCT sessions.session_id) AS sessions,
 	    SUM(sessions.page_views) AS page_views,
 	    SUM(sessions.time_engaged_in_s) AS time_engaged_in_s,
-	    SUM(DATEDIFF(m, sessions.session_start, sessions.session_end)) sessions_length.
+	    SUM(DATEDIFF(s, sessions.session_start, sessions.session_end)) sessions_length_in_s
 
 
 	FROM web.sessions_tmp AS sessions
+	WHERE sessions.marketing_campaign IS NOT NULL
 
 	GROUP BY 1,2,3,4,5,6,7
+	)
+
+	SELECT
+		*,
+		DATEDIFF(d, s.campaing_start, CURRENT_DATE()) AS campaign_days_active
+	FROM campaigns AS c
 	);

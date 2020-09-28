@@ -219,7 +219,7 @@ AS (
     e.dom_interactive_to_complete_time_in_ms,
     e.onload_time_in_ms,
     e.total_time_in_ms
-    --Add last page view in sessions boolean
+
 
   FROM scratch.web_events AS a -- the INNER JOIN requires that all contexts are set
 

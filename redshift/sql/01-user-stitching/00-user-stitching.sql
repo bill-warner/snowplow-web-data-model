@@ -2,8 +2,8 @@
 -- First example of simple model.
 -- Second example of time dependent model
 
-DROP TABLE IF EXISTS scratch.user_stitching_tmp;
-CREATE TABLE scratch.user_stitching_tmp
+DROP TABLE IF EXISTS web.user_stitching_tmp;
+CREATE TABLE web.user_stitching_tmp
   DISTKEY(domain_userid)
   SORTKEY(domain_userid)
 AS (

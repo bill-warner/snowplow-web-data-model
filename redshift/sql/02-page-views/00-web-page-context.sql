@@ -23,19 +23,21 @@ AS (
 
   -- deduplicate the web page context in 2 steps
 
-  WITH prep AS (
+  WITH root_id_to_page_id AS (
 
     SELECT
-
       root_id,
-      id AS page_view_id
+      id AS page_view_id,
+      COUNT(*) OVER(PARTITION BY root_id) count_page_view_id
 
     FROM atomic.com_snowplowanalytics_snowplow_web_page_1
-
+    WHERE id IS NOT NULL --added
     GROUP BY 1,2
 
   )
 
-  SELECT * FROM prep WHERE root_id NOT IN (SELECT root_id FROM prep GROUP BY 1 HAVING COUNT(*) > 1) -- exclude all root ID with more than one page view ID
-
+  -- SELECT * FROM prep WHERE root_id NOT IN (SELECT root_id FROM prep GROUP BY 1 HAVING COUNT(*) > 1) -- exclude all root ID with more than one page view ID
+  SELECT *
+  FROM root_id_to_page_id
+  WHERE count_page_view_id = 1 -- exclude all root ID with more than one page view ID
 );

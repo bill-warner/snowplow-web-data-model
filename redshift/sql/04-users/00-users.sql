@@ -17,7 +17,7 @@
 
 DROP TABLE IF EXISTS web.users_tmp;
 CREATE TABLE web.users_tmp
-  DISTKEY(user_snowplow_domain_id)
+  DISTKEY(stitched_user_id)
   SORTKEY(first_session_start)
 AS (
 
@@ -25,7 +25,7 @@ AS (
 
     SELECT
 
-      user_snowplow_domain_id,
+      stitched_user_id, --added
 
       -- time
 
@@ -53,8 +53,8 @@ AS (
     -- user
 
     a.user_custom_id,
-    a.user_snowplow_domain_id,
-    a.user_snowplow_crossdomain_id,
+    a.stitched_user_id
+    a.stitched_user_id_type
 
     -- first sesssion: time
 
@@ -139,7 +139,7 @@ AS (
   FROM web.sessions_tmp AS a
 
   INNER JOIN prep AS b
-    ON a.user_snowplow_domain_id = b.user_snowplow_domain_id
+    ON a.stitched_user_id = b.stitched_user_id
 
   WHERE a.session_index = 1
 

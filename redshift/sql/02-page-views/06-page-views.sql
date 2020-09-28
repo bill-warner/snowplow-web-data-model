@@ -26,10 +26,15 @@ AS (
     -- user
 
     a.user_id AS user_custom_id,
+    COALESCE(us.user_id, a.domain_userid) AS stitched_user_id
+    CASE 
+      WHEN a.user_id IS NOT NULL THEN 'user_custom_id'
+      WHEN a.user_id IS NULL AND us.user_id IS NOT NULL THEN 'assumed_user_id'
+    ELSE 'user_snowplow_domain_id' END stitched_user_id_type, --added
     a.domain_userid AS user_snowplow_domain_id,
     a.network_userid AS user_snowplow_crossdomain_id,
 
-    -- sesssion
+    -- session
 
     a.domain_sessionid AS session_id,
     a.domain_sessionidx AS session_index,
@@ -38,8 +43,10 @@ AS (
 
     a.page_view_id,
 
-    ROW_NUMBER() OVER (PARTITION BY a.domain_userid ORDER BY b.min_tstamp) AS page_view_index,
+    ROW_NUMBER() OVER (PARTITION BY a.domain_userid ORDER BY b.min_tstamp) AS domain_page_view_index, --changed name
+    ROW_NUMBER() OVER (PARTITION BY COALESCE(us.user_id, a.domain_userid) ORDER BY b.min_tstamp) AS page_view_index, --added
     ROW_NUMBER() OVER (PARTITION BY a.domain_sessionid ORDER BY b.min_tstamp) AS page_view_in_session_index,
+    ROW_NUMBER() OVER (PARTITION BY a.domain_sessionid ORDER BY b.min_tstamp DESC) AS page_view_in_session_reverse_index, --Added
 
     -- page view: time (replace Europe/London with the relevant timezone - no issues with DST)
 
@@ -212,6 +219,7 @@ AS (
     e.dom_interactive_to_complete_time_in_ms,
     e.onload_time_in_ms,
     e.total_time_in_ms
+    --Add last page view in sessions boolean
 
   FROM scratch.web_events AS a -- the INNER JOIN requires that all contexts are set
 
@@ -226,6 +234,11 @@ AS (
 
   INNER JOIN scratch.web_timing_context AS e
     ON a.page_view_id = e.page_view_id
+
+  LEFT JOIN scratch.user_stitching AS us
+    ON a.domain_userid = us.domain_userid
+    AND a.page_view_start >= us.valid_from
+    AND a.page_view_start < us.valid_to
 
   WHERE a.br_family != 'Robot/Spider'
     AND a.useragent NOT SIMILAR TO '%(bot|crawl|slurp|spider|archiv|spinn|sniff|seo|audit|survey|pingdom|worm|capture|(browser|screen)shots|analyz|index|thumb|check|facebook|PingdomBot|PhantomJS|YandexBot|Twitterbot|a_archiver|facebookexternalhit|Bingbot|BingPreview|Googlebot|Baiduspider|360(Spider|User-agent)|semalt)%'

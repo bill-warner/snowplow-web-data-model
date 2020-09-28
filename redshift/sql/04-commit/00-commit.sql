@@ -17,6 +17,13 @@
 
 BEGIN;
 
+  DROP TABLE IF EXISTS web.user_stitching;
+  ALTER TABLE web.user_stitching_tmp RENAME TO user_stitching;
+
+COMMIT;
+
+BEGIN;
+
   DROP TABLE IF EXISTS web.page_views;
   ALTER TABLE web.page_views_tmp RENAME TO page_views;
 
@@ -35,6 +42,21 @@ BEGIN;
   ALTER TABLE web.users_tmp RENAME TO users;
 
 COMMIT;
+
+BEGIN;
+
+  DROP TABLE IF EXISTS web.marketing_campaigns;
+  ALTER TABLE web.marketing_campaigns_tmp RENAME TO marketing_campaigns;
+
+COMMIT;
+
+BEGIN;
+
+  DROP TABLE IF EXISTS web.page_performance;
+  ALTER TABLE web.page_performance_tmp RENAME TO page_performance;
+
+COMMIT;
+
 
 DROP TABLE IF EXISTS scratch.web_page_context;
 DROP TABLE IF EXISTS scratch.web_events;

@@ -53,6 +53,7 @@ AS (
     WHERE ev.event_name IN ('page_view', 'page_ping')
       AND ev.doc_height > 0 -- exclude problematic (but rare) edge case
       AND ev.doc_width > 0 -- exclude problematic (but rare) edge case
+      AND ev.platform = 'web' --added filter
 
     GROUP BY 1
 

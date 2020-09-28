@@ -27,6 +27,8 @@ AS (
 
       session_id,
 
+      MAX(CASE WHEN page_view_index = 1 THEN TRUE ELSE FALSE END) first_user_session, --added
+
       -- time
 
       MIN(page_view_start) AS session_start,
@@ -34,6 +36,22 @@ AS (
 
       MIN(page_view_start_local) AS session_start_local,
       MAX(page_view_end_local) AS session_end_local,
+
+      MAX(page_view_end) OVER() AS latest_universal_page_view_tmstamp --Added
+
+      -- last page ADDED
+
+      MAX(CASE WHEN page_view_in_session_reverse_index = 1 THEN page_url END) AS last_page_url,
+      MAX(CASE WHEN page_view_in_session_reverse_index = 1 THEN page_url_scheme END) AS last_page_url_scheme,
+      MAX(CASE WHEN page_view_in_session_reverse_index = 1 THEN page_url_host END) AS last_page_url_host,
+      MAX(CASE WHEN page_view_in_session_reverse_index = 1 THEN page_url_port END) AS last_page_url_port,
+      MAX(CASE WHEN page_view_in_session_reverse_index = 1 THEN page_url_path END) AS last_page_url_path,
+      MAX(CASE WHEN page_view_in_session_reverse_index = 1 THEN page_url_query END) AS last_page_url_query,
+      MAX(CASE WHEN page_view_in_session_reverse_index = 1 THEN page_url_fragment END) AS last_page_url_fragment,
+      MAX(CASE WHEN page_view_in_session_reverse_index = 1 THEN page_title END) AS last_page_title,
+
+      -- Performance Added
+      SUM(total_time_in_ms) AS total_load_time,
 
       -- engagement
 
@@ -50,24 +68,34 @@ AS (
     ORDER BY 1
 
   )
+  , sessions AS (
 
   SELECT
 
     -- user
 
     a.user_custom_id,
+    a.stitched_user_id,
+    a.stitched_user_id_type,
     a.user_snowplow_domain_id,
     a.user_snowplow_crossdomain_id,
 
-    -- sesssion
+    -- session
 
     a.session_id,
-    a.session_index,
+    a.session_index AS domain_session_index, --added
+    CASE 
+      WHEN DATEDIFF(MINUTE,b.session_end,b.latest_universal_page_view_tmstamp) < 30
+      THEN FALSE
+    ELSE TRUE END session_completed, --added
+    b.first_user_session,
 
     -- session: time
 
     b.session_start,
     b.session_end,
+    LAG(b.session_start) OVER(PARTITION BY a.stitched_user_id ORDER BY b.session_start) previous_session_start, --added
+    LEAD(b.session_start) OVER(PARTITION BY a.stitched_user_id ORDER BY b.session_start) next_session_start, --added
 
       -- example derived dimensions
 
@@ -92,6 +120,9 @@ AS (
       DATE_PART(hour, b.session_start_local)::INTEGER AS session_local_hour_of_day,
       TRIM(TO_CHAR(b.session_start_local, 'd')) AS session_local_day_of_week,
       MOD(EXTRACT(DOW FROM b.session_start_local)::INTEGER - 1 + 7, 7) AS session_local_day_of_week_index,
+
+    -- Performance Added
+    b.total_load_time
 
     -- engagement
 
@@ -127,6 +158,17 @@ AS (
     a.page_url_fragment AS first_page_url_fragment,
 
     a.page_title AS first_page_title,
+
+    -- last page ADDED
+
+    b.last_page_url
+    b.last_page_url_scheme
+    b.last_page_url_host
+    b.last_page_url_port
+    b.last_page_url_path
+    b.last_page_url_query
+    b.last_page_url_fragment
+    b.last_page_title
 
     -- referer
 
@@ -210,5 +252,11 @@ AS (
     ON a.session_id = b.session_id
 
   WHERE a.page_view_in_session_index = 1
+  )
+  
+  SELECT *,
+    ROW_NUMBER() OVER (PARTITION BY stitched_user_id ORDER BY session_start) session_id
+
+  FROM sessions
 
 );

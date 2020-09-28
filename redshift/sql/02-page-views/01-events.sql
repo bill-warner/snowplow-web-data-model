@@ -23,7 +23,7 @@ AS (
 
   -- select the relevant dimensions from atomic.events
 
-  WITH prep AS (
+  WITH events AS (
 
     SELECT
 
@@ -106,11 +106,18 @@ AS (
       ON ev.event_id = wp.root_id
 
     WHERE ev.platform = 'web' AND ev.event_name = 'page_view' -- filtering on page view events removes the need for a FIRST_VALUE function
-
+    -- Why is it just web? Could use this filter in other models
   )
 
+  , events_depupe AS (
+    SELECT *,
+      ROW_NUMBER() OVER (PARTITION BY page_view_id ORDER BY device_created_tstamp) AS n
+    FROM events
+  )
   -- more than one page view event per page view ID? select the first one
 
-  SELECT * FROM (SELECT *, ROW_NUMBER () OVER (PARTITION BY page_view_id ORDER BY dvce_created_tstamp) AS n FROM prep) WHERE n = 1
-
+  -- SELECT * FROM (SELECT *, ROW_NUMBER () OVER (PARTITION BY page_view_id ORDER BY dvce_created_tstamp) AS n FROM prep) WHERE n = 1
+  SELECT *
+  FROM events_depupe
+  WHERE n = 1
 );

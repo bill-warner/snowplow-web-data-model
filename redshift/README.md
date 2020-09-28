@@ -60,7 +60,7 @@ This model gives a high level view of individual page performance. By aggregatin
 - Popular pages
 - Trending pages experiencing large growth in views
 - Pages that cause users to churn
-- Un-performant pages
+- Un-performant pages i.e. slow load times
 - Popular content. Ideally we would want some kind of page content categorisation to achieve this.
 - Device friendly content.
 

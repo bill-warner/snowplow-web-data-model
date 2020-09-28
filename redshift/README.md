@@ -12,7 +12,7 @@ The improvements fall into two groups:
   - Additional dimensions/facts
   - Performance tuning
   
-In addition to the changes below, we could update the models to run incrementally. This would both improve both performance and cost. I chose not to do this however as there is already a pre-existing version of incremental models. 
+In addition to the changes below, we could update the models to run incrementally. This would both improve performance and cost. I chose not to do this however as there is already a pre-existing version of incremental models. 
 
 ### Creation of new models
 #### [User Stitching](sql/01-user-stitching/00-user-stitching.sql)
